@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Planning Cours — Seyda Zeynab</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a4a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Planning Cours">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
+    :root {
+      --vert: #1a4a2e;
+      --vert-clair: #2d6e47;
+      --or: #c9a84c;
+      --or-pale: #f0dfa0;
+      --fond: #0f2b1c;
+      --carte: #163825;
+      --texte: #f4edda;
+      --gris: #8aab96;
+      --danger: #e07070;
+
+      /* Couleurs par TYPE d'élève (bordure de la carte) */
+      --type-adulte: #c9a84c;
+      --type-ado: #9b6fd9;
+      --type-nouveau: #e67e22;
+
+      /* Couleurs de présence */
+      --presence-present: #4caf7d;
+      --presence-absent: #e07070;
+      --presence-reporte: #e8973a;
+      --presence-prevu: #5b7268;
+
+      /* Couleurs de statut */
+      --status-confirme: #4caf7d;
+      --status-a-confirmer: #e0c34a;
+      --status-a-reprogrammer: #e07070;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--fond);
+      font-family: 'Nunito', sans-serif;
+      color: var(--texte);
+      min-height: 100vh;
+      padding: 0 0 50px 0;
+    }
+
+    .app-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--vert) 0%, #0f2b1c 100%);
+      border-bottom: 2px solid var(--or);
+      padding: 20px 20px 14px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.45rem;
+      color: var(--or);
+      letter-spacing: 0.05em;
+    }
+
+    header p {
+      font-size: 0.72rem;
+      color: var(--gris);
+      margin-top: 4px;
+    }
+
+    .header-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid var(--or);
+      color: var(--or-pale);
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .pill-btn.active {
+      background: var(--or);
+      color: #0f2b1c;
+    }
+
+    /* ===== RESUME HEBDOMADAIRE ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 8px;
+      padding: 12px 14px;
+      background: rgba(201,168,76,0.06);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .stat-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .stat-chip .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--or);
+      display: block;
+      line-height: 1.1;
+    }
+
+    .stat-chip .stat-label {
+      font-size: 0.6rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* ===== LEGENDE ===== */
+    .legend {
+      padding: 12px 16px;
+      background: var(--carte);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .legend-row:last-child { margin-bottom: 0; }
+
+    .legend-title {
+      font-size: 0.6rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      color: var(--gris);
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ===== TODAY VIEW ===== */
+    .day-card.hidden-not-today { display: none; }
+
+    /* ===== DAYS ===== */
+    .days-container {
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @media (min-width: 720px) {
+      .days-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        align-items: start;
+      }
+    }
+
+    .day-card {
+      background: var(--carte);
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.15);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    .day-header {
+      padding: 12px 16px;
+      background: rgba(201,168,76,0.08);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .day-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .day-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--or);
+      letter-spacing: 0.04em;
+    }
+
+    .day-count {
+      font-size: 0.65rem;
+      background: rgba(201,168,76,0.15);
+      color: var(--or-pale);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    .day-summary {
+      font-size: 0.65rem;
+      color: var(--gris);
+      margin-top: 4px;
+    }
+
+    .slots {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .empty-day {
+      padding: 14px 12px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--gris);
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    .slot {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border-left: 4px solid;
+      background: rgba(255,255,255,0.04);
+      position: relative;
+    }
+
+    .slot.type-adulte { border-color: var(--type-adulte); }
+    .slot.type-ado { border-color: var(--type-ado); }
+    .slot.type-nouveau { border-color: var(--type-nouveau); }
+    .slot.has-overlap { background: rgba(224,112,112,0.08); }
+
+    .slot-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .slot-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .slot-time {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--texte);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .slot-label-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .slot-label {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .slot-subjects {
+      font-size: 0.74rem;
+      color: var(--or-pale);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .tz-box {
+      margin-top: 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 8px;
+      padding: 6px 9px;
+    }
+
+    .tz-line {
+      font-size: 0.68rem;
+      color: var(--gris);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tz-line b { color: var(--or-pale); font-weight: 700; }
+
+    .badges-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 7px;
+      flex-wrap: wrap;
+    }
+
+    .badge-btn {
+      border: none;
+      border-radius: 20px;
+      padding: 4px 9px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-presence.prevu { background: var(--presence-prevu); }
+    .badge-presence.present { background: var(--presence-present); }
+    .badge-presence.absent { background: var(--presence-absent); }
+    .badge-presence.reporte { background: var(--presence-reporte); }
+
+    .badge-status.confirme { background: var(--status-confirme); }
+    .badge-status.a_confirmer { background: var(--status-a-confirmer); color:#3a2f0a; }
+    .badge-status.a_reprogrammer { background: var(--status-a-reprogrammer); }
+
+    .slot-duration {
+      font-size: 0.65rem;
+      background: rgba(255,255,255,0.07);
+      padding: 2px 7px;
+      border-radius: 8px;
+      color: var(--gris);
+      flex-shrink: 0;
+    }
+
+    .del-btn {
+      background: rgba(224,112,112,0.15);
+      color: #e88;
+      border: 1px solid rgba(224,112,112,0.3);
+      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.editing .del-btn { display: flex; }
+
+    .editable {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      width: auto;
+      padding: 2px 4px;
+      border-radius: 5px;
+    }
+
+    body.editing .editable {
+      background: rgba(255,255,255,0.08);
+      border: 1px dashed rgba(201,168,76,0.5);
+      cursor: text;
+    }
+
+    body.editing .editable:focus {
+      outline: none;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid var(--or);
+    }
+
+    .time-input { width: 52px; text-align: center; }
+    .name-input { width: 100%; }
+
+    .edit-panel {
+      display: none;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(201,168,76,0.25);
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    body.editing .edit-panel { display: flex; }
+
+    .edit-panel select {
+      background: rgba(255,255,255,0.08);
+      border: 1px dashed rgba(201,168,76,0.5);
+      color: var(--texte);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.66rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+
+    .subject-chip {
+      font-size: 0.62rem;
+      padding: 4px 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.35);
+      background: rgba(255,255,255,0.03);
+      color: var(--gris);
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+    }
+
+    .subject-chip.active {
+      background: var(--or);
+      color: #0f2b1c;
+      border-color: var(--or);
+    }
+
+    .add-slot-btn {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      background: rgba(201,168,76,0.08);
+      border: 1px dashed rgba(201,168,76,0.4);
+      color: var(--or-pale);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      margin-top: 4px;
+    }
+
+    body.editing .add-slot-btn { display: block; }
+
+    .alarm-section {
+      margin: 6px 14px 0;
+      background: var(--carte);
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.15);
+      padding: 16px;
+    }
+
+    .alarm-section h3 {
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--or);
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .alarm-section p {
+      font-size: 0.7rem;
+      color: var(--gris);
+      line-height: 1.5;
+    }
+
+    .action-row {
+      display: none;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    body.editing .action-row { display: flex; }
+
+    .action-btn {
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: var(--or-pale);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .action-btn.danger {
+      background: rgba(224,112,112,0.1);
+      border-color: rgba(224,112,112,0.3);
+      color: #e88;
+    }
+
+    .ornament {
+      text-align: center;
+      color: var(--or);
+      font-size: 1.2rem;
+      padding: 16px 0 4px;
+      opacity: 0.5;
+    }
+
+    .overlap-warning {
+      font-size: 0.65rem;
+      color: var(--danger);
+      background: rgba(224,112,112,0.1);
+      border: 1px solid rgba(224,112,112,0.2);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--vert-clair);
+      color: white;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--danger); }
+
+    /* ===== VIEW TABS ===== */
+    .view-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px 0;
+      flex-wrap: wrap;
+    }
+
+    .view-tab {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.25);
+      color: var(--gris);
+      padding: 7px 12px;
+      border-radius: 16px 16px 0 0;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .view-tab.active {
+      background: var(--carte);
+      color: var(--or);
+      border-bottom-color: var(--carte);
+    }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* ===== DISPONIBILITES ===== */
+    .avail-panel {
+      padding: 14px;
+    }
+
+    .avail-config {
+      background: var(--carte);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .avail-config label {
+      display: block;
+      font-size: 0.65rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      margin-top: 8px;
+    }
+
+    .avail-config label:first-child { margin-top: 0; }
+
+    .avail-config input[type="text"],
+    .avail-config input[type="number"] {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--texte);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    .avail-config .row2 { display: flex; gap: 8px; }
+    .avail-config .row2 > div { flex: 1; }
+
+    .free-day-block {
+      background: var(--carte);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .free-day-title {
+      padding: 9px 14px;
+      background: rgba(201,168,76,0.08);
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      color: var(--or);
+      font-size: 1.02rem;
+    }
+
+    .free-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 6px;
+      padding: 10px;
+    }
+
+    .free-block {
+      font-size: 0.66rem;
+      text-align: center;
+      padding: 7px 4px;
+      border-radius: 7px;
+      font-weight: 700;
+      cursor: default;
+      border: 1.5px solid transparent;
+    }
+
+    .free-block.libre {
+      background: rgba(76,175,125,0.15);
+      color: #7fdba6;
+      cursor: pointer;
+    }
+
+    .free-block.libre.selected {
+      background: var(--or);
+      color: #0f2b1c;
+      border-color: var(--or-pale);
+    }
+
+    .free-block.libre.already-published {
+      border-color: rgba(240,223,160,0.6);
+    }
+
+    .free-block.occupe {
+      background: rgba(224,112,112,0.12);
+      color: #e59;
+      opacity: 0.6;
+    }
+
+    .free-block.a_confirmer {
+      background: rgba(224,195,74,0.15);
+      color: var(--status-a-confirmer);
+      opacity: 0.8;
+    }
+
+    .selection-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--vert);
+      border-top: 2px solid var(--or);
+      padding: 10px 14px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      z-index: 50;
+    }
+
+    .selection-bar.show { display: flex; }
+    .selection-bar span { font-size: 0.72rem; color: var(--or-pale); font-weight: 700; }
+
+    .avail-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+      padding: 9px 11px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .avail-list-item .info { font-size: 0.78rem; font-weight: 700; }
+    .avail-list-item .actions { display: flex; gap: 6px; }
+
+    .mini-btn {
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: var(--or-pale);
+      padding: 5px 9px;
+      border-radius: 8px;
+      font-size: 0.64rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .mini-btn.danger { border-color: rgba(224,112,112,0.4); color: #e88; }
+    .mini-btn.primary { background: var(--or); color: #0f2b1c; border-color: var(--or); }
+
+    /* ===== ELEVE / EMPLOI DU TEMPS ===== */
+    .student-panel { padding: 14px; }
+
+    .student-select {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: var(--texte);
+      padding: 10px;
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+    }
+
+    .student-slot-row {
+      background: var(--carte);
+      border-left: 4px solid var(--or);
+      border-radius: 10px;
+      padding: 11px 13px;
+      margin-bottom: 8px;
+    }
+
+    .student-slot-row .day { font-family: 'Cormorant Garamond', serif; color: var(--or); font-weight: 700; font-size: 1rem; }
+    .student-slot-row .line { font-size: 0.75rem; color: var(--gris); margin-top: 3px; }
+
+    /* ===== PICKER (vue élève externe via lien) ===== */
+    .picker-wrap {
+      max-width: 480px;
+      margin: 30px auto;
+      padding: 0 16px;
+    }
+
+    .picker-card {
+      background: var(--carte);
+      border: 1.5px solid var(--or);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .picker-card h2 {
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--or);
+      font-size: 1.3rem;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .picker-card .sub { text-align: center; font-size: 0.72rem; color: var(--gris); margin-bottom: 16px; }
+
+    .picker-field { margin-bottom: 12px; }
+    .picker-field label { display: block; font-size: 0.68rem; color: var(--gris); text-transform: uppercase; margin-bottom: 4px; }
+    .picker-field input, .picker-field select {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: var(--texte);
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.85rem;
+    }
+
+    .picker-slot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(201,168,76,0.25);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .picker-slot.chosen { border-color: var(--or); background: rgba(201,168,76,0.15); }
+    .picker-slot input { accent-color: var(--or); width: 18px; height: 18px; }
+    .picker-slot .txt { font-size: 0.82rem; font-weight: 700; }
+    .picker-slot .local { font-size: 0.68rem; color: var(--or-pale); display: block; margin-top: 2px; }
+
+    .picker-submit {
+      width: 100%;
+      background: var(--or);
+      color: #0f2b1c;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 8px;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .picker-back {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 0.68rem;
+      color: var(--gris);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+<header>
+  <h1>📚 Planning Cours en Ligne</h1>
+  <p>Seyda Zeynab Academy · Heure de référence : Dakar (GMT)</p>
+  <div class="header-actions">
+    <button class="pill-btn" id="todayToggle">📅 Aujourd'hui</button>
+    <button class="pill-btn" id="editToggle">✏️ Modifier le planning</button>
+  </div>
+</header>
+
+<div id="pickerView"></div>
+
+<div id="teacherApp">
+
+<div class="view-tabs">
+  <button class="view-tab active" data-view="semaine">📆 Semaine</button>
+  <button class="view-tab" data-view="dispo">🟢 Disponibilités</button>
+  <button class="view-tab" data-view="eleve">👤 Élève</button>
+</div>
+
+<div class="view-section active" id="view-semaine">
+
+<div class="stats-grid" id="statsBar"></div>
+
+<div class="legend">
+  <div class="legend-title">Type d'élève (couleur)</div>
+  <div class="legend-row">
+    <div class="legend-item"><div class="dot" style="background:var(--type-adulte)"></div> Adulte</div>
+    <div class="legend-item"><div class="dot" style="background:var(--type-ado)"></div> Adolescent</div>
+    <div class="legend-item"><div class="dot" style="background:var(--type-nouveau)"></div> Nouvel élève</div>
+  </div>
+  <div class="legend-title">Pays (drapeau)</div>
+  <div class="legend-row">
+    <div class="legend-item">🇸🇳 Sénégal</div>
+    <div class="legend-item">🇫🇷 France</div>
+    <div class="legend-item">🇮🇹 Italie</div>
+    <div class="legend-item">🇺🇸 USA</div>
+  </div>
+</div>
+
+<div class="days-container" id="daysContainer"></div>
+
+<div class="alarm-section">
+  <h3>💾 Sauvegarde</h3>
+  <p>Toutes tes modifications sont enregistrées automatiquement sur cet appareil. Comme chaque téléphone/navigateur a sa propre sauvegarde, utilise "Exporter" pour créer un fichier de secours et "Importer" pour le charger sur un autre appareil.</p>
+  <div class="action-row">
+    <button class="action-btn" id="exportBtn">⬇️ Exporter</button>
+    <button class="action-btn" id="importBtn">⬆️ Importer</button>
+    <button class="action-btn danger" id="resetBtn">🗑 Réinitialiser</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json" style="display:none">
+</div>
+
+</div>
+
+<div class="view-section" id="view-dispo">
+  <div class="avail-panel">
+    <div class="avail-config">
+      <label>Mon numéro WhatsApp (avec indicatif pays, sans le +)</label>
+      <input type="text" id="whatsappInput" placeholder="ex: 221771234567">
+      <div class="row2">
+        <div>
+          <label>Plage de travail — début</label>
+          <input type="text" id="workStartInput" placeholder="ex: 08h00">
+        </div>
+        <div>
+          <label>Plage de travail — fin</label>
+          <input type="text" id="workEndInput" placeholder="ex: 22h00">
+        </div>
+      </div>
+      <button class="mini-btn primary" id="saveSettingsBtn" style="margin-top:10px;">💾 Enregistrer</button>
+    </div>
+
+    <div class="free-day-title" style="border-radius:12px 12px 0 0;background:var(--carte);border:1px solid rgba(201,168,76,0.15);border-bottom:none;">🟢 Mes heures libres — appuie sur les créneaux verts à proposer</div>
+    <div id="freeHoursContainer"></div>
+
+    <h3 style="font-family:'Cormorant Garamond',serif;color:var(--or);margin:18px 0 8px;">📅 Disponibilités déjà publiées</h3>
+    <div id="availList"></div>
+    <button class="action-btn" id="shareAvailBtn" style="margin-top:6px;">📤 Envoyer mes disponibilités</button>
+
+    <h3 style="font-family:'Cormorant Garamond',serif;color:var(--or);margin:22px 0 8px;">📩 Choix reçu d'un élève ? Réserve-le ici</h3>
+    <p style="font-size:0.7rem;color:var(--gris);margin-bottom:10px;">Quand un élève t'écrit son créneau choisi par WhatsApp, sélectionne-le ci-dessus dans la liste et appuie sur "Réserver" pour l'ajouter automatiquement à ton planning.</p>
+  </div>
+</div>
+
+<div class="view-section" id="view-eleve">
+  <div class="student-panel">
+    <select class="student-select" id="studentSelect"></select>
+    <div id="studentScheduleBox"></div>
+    <button class="action-btn" id="shareScheduleBtn" style="width:100%;margin-top:10px;">📤 Envoyer l'emploi du temps</button>
+    <canvas id="scheduleCanvas" style="display:none;"></canvas>
+  </div>
+</div>
+
+</div>
+
+<div class="ornament" id="bottomOrnament">✦ بِسْمِ اللَّهِ ✦</div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'sz_planning_data_v4';
+  const OLD_KEYS = ['sz_planning_data_v3', 'sz_planning_data_v2'];
+  const DAY_ORDER = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  const COUNTRY_FLAGS = { senegal: '🇸🇳', usa: '🇺🇸', italie: '🇮🇹', france: '🇫🇷' };
+  const COUNTRY_LABELS = { senegal: 'Sénégal', usa: 'USA', italie: 'Italie', france: 'France' };
+  const SUBJECTS = { coran: 'Coran', lecture: 'Lecture', arabe: 'Arabe', fiqh: 'Fiqh', tafsir: 'Tafsir', athkar: 'Athkar' };
+  const US_CITIES = {
+    'America/New_York': 'New York (Est)',
+    'America/Chicago': 'Chicago (Centre)',
+    'America/Denver': 'Denver (Montagne)',
+    'America/Los_Angeles': 'Los Angeles (Pacifique)',
+    'America/Phoenix': 'Phoenix (Arizona, sans DST)'
+  };
+  const PRESENCE_ORDER = ['prevu', 'present', 'absent', 'reporte'];
+  const PRESENCE_LABELS = { prevu: '⬜ Prévu', present: '🟢 Présent', absent: '🔴 Absent', reporte: '🟠 Reporté' };
+  const STATUS_ORDER = ['confirme', 'a_confirmer', 'a_reprogrammer'];
+  const STATUS_LABELS = { confirme: '🟢 Confirmé', a_confirmer: '🟡 À confirmer', a_reprogrammer: '🔴 À reprogrammer' };
+
+  // Données d'origine (horaires, noms, tarifs non modifiés) — classification enrichie ci-dessous.
+  const DEFAULT_DATA = {
+    Lundi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '15h00', end: '16h30', label: 'Ado Sénégal', type: 'ado', country: 'senegal' },
+      { start: '17h30', end: '19h00', label: 'Adulte Sénégal', type: 'adulte', country: 'senegal' },
+      { start: '20h00', end: '21h00', label: 'Elimane', type: 'nouveau', country: 'senegal' }
+    ],
+    Mardi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '15h00', end: '16h30', label: 'Ado Sénégal', type: 'ado', country: 'senegal' },
+      { start: '17h30', end: '19h00', label: 'Adulte Sénégal', type: 'adulte', country: 'senegal' }
+    ],
+    Mercredi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '17h30', end: '19h00', label: 'Adulte Sénégal', type: 'adulte', country: 'senegal' },
+      { start: '20h00', end: '21h00', label: 'Besse', type: 'nouveau', country: 'senegal' }
+    ],
+    Jeudi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '16h00', end: '18h00', label: 'Italie', type: 'adulte', country: 'italie' }
+    ],
+    Vendredi: [
+      { start: '12h00', end: '13h30', label: 'Ado Sénégal', type: 'ado', country: 'senegal' },
+      { start: '16h00', end: '18h00', label: 'Italie', type: 'adulte', country: 'italie' },
+      { start: '21h00', end: '22h00', label: 'Elimane', type: 'nouveau', country: 'senegal' }
+    ],
+    Samedi: [
+      { start: '10h00', end: '12h00', label: 'Italie', type: 'adulte', country: 'italie' }
+    ],
+    Dimanche: [
+      { start: '10h00', end: '12h00', label: 'Italie', type: 'adulte', country: 'italie' },
+      { start: '20h00', end: '21h00', label: 'Besse', type: 'nouveau', country: 'senegal' }
+    ]
+  };
+
+  let DAYS_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  let AVAILABILITY = []; // { id, day, start, end }
+  let SETTINGS = { whatsapp: '', workStart: '08h00', workEnd: '22h00' };
+  let todayViewActive = false;
+  let selectedFreeBlocks = new Set(); // "day|startMin"
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  function parseTime(str) {
+    const m = String(str || '').match(/(\d{1,2})h(\d{2})/);
+    if (!m) return null;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }
+
+  // Toutes les heures sont saisies en heure du Sénégal (GMT+0, pas de changement d'heure).
+  // Conversion automatique vers les autres fuseaux, avec prise en compte de l'heure d'été/hiver.
+  function convertTime(str, timeZone) {
+    const mins = parseTime(str);
+    if (mins === null) return null;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    const now = new Date();
+    const utcRef = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), h, m));
+    return utcRef.toLocaleTimeString('fr-FR', { timeZone, hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatDuration(mins) {
+    if (mins === null || mins <= 0) return '—';
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return m === 0 ? h + 'h' : h + 'h' + String(m).padStart(2, '0');
+  }
+
+  function dayOverlaps(slots) {
+    const flags = slots.map(() => false);
+    for (let i = 0; i < slots.length; i++) {
+      const a1 = parseTime(slots[i].start), a2 = parseTime(slots[i].end);
+      if (a1 === null || a2 === null) continue;
+      for (let j = i + 1; j < slots.length; j++) {
+        const b1 = parseTime(slots[j].start), b2 = parseTime(slots[j].end);
+        if (b1 === null || b2 === null) continue;
+        if (a1 < b2 && b1 < a2) { flags[i] = true; flags[j] = true; }
+      }
+    }
+    return flags;
+  }
+
+  function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function normalizeLabel(label) {
+    return String(label || '').trim().toLowerCase();
+  }
+
+  function allSlots() {
+    let out = [];
+    DAY_ORDER.forEach(day => { out = out.concat(DAYS_DATA[day] || []); });
+    return out;
+  }
+
+  function renderStats() {
+    const slots = allSlots();
+    let totalMins = 0;
+    const students = new Set();
+    const countries = new Set();
+    const nouveaux = new Set();
+    slots.forEach(s => {
+      const a = parseTime(s.start), b = parseTime(s.end);
+      if (a !== null && b !== null && b > a) totalMins += (b - a);
+      students.add(normalizeLabel(s.label));
+      if (s.country) countries.add(s.country);
+      if (s.type === 'nouveau') nouveaux.add(normalizeLabel(s.label));
+    });
+    const stats = [
+      { num: slots.length, label: 'Créneaux', icon: '📚' },
+      { num: formatDuration(totalMins), label: 'Heures', icon: '⏱️' },
+      { num: students.size, label: 'Élèves', icon: '👩‍🎓' },
+      { num: countries.size, label: 'Pays', icon: '🌍' },
+      { num: nouveaux.size, label: 'Nouveaux', icon: '🆕' }
+    ];
+    document.getElementById('statsBar').innerHTML = stats.map(s => `
+      <div class="stat-chip">
+        <span class="stat-num">${s.icon} ${s.num}</span>
+        <span class="stat-label">${s.label}</span>
+      </div>`).join('');
+  }
+
+  function daySummary(slots) {
+    let totalMins = 0;
+    const students = new Set();
+    slots.forEach(s => {
+      const a = parseTime(s.start), b = parseTime(s.end);
+      if (a !== null && b !== null && b > a) totalMins += (b - a);
+      students.add(normalizeLabel(s.label));
+    });
+    return `${slots.length} créneau${slots.length > 1 ? 'x' : ''} · ${students.size} élève${students.size > 1 ? 's' : ''} · ${formatDuration(totalMins)}`;
+  }
+
+  function subjectsText(subjects) {
+    if (!subjects || subjects.length === 0) return '';
+    return '📖 ' + subjects.map(k => SUBJECTS[k] || k).join(' + ');
+  }
+
+  function tzBoxHtml(s) {
+    const usTz = s.usTz || 'America/New_York';
+    return `
+      <div class="tz-box">
+        <div class="tz-line"><span>🇸🇳 Dakar</span><b>${escapeHtml(s.start)}–${escapeHtml(s.end)}</b></div>
+        <div class="tz-line"><span>🇫🇷 France</span><b>${convertTime(s.start, 'Europe/Paris') || '—'}–${convertTime(s.end, 'Europe/Paris') || '—'}</b></div>
+        <div class="tz-line"><span>🇮🇹 Italie</span><b>${convertTime(s.start, 'Europe/Rome') || '—'}–${convertTime(s.end, 'Europe/Rome') || '—'}</b></div>
+        <div class="tz-line"><span>🇺🇸 USA${s.country === 'usa' ? ' · ' + (US_CITIES[usTz] || usTz).split(' (')[0] : ''}</span><b>${convertTime(s.start, usTz) || '—'}–${convertTime(s.end, usTz) || '—'}</b></div>
+      </div>`;
+  }
+
+  function editPanelHtml(day, idx, s) {
+    const subjectChips = Object.keys(SUBJECTS).map(key => `
+      <button type="button" class="subject-chip ${((s.subjects||[]).includes(key)) ? 'active' : ''}" data-action="toggle-subject" data-subject="${key}">${SUBJECTS[key]}</button>
+    `).join('');
+    const typeOptions = ['adulte','ado','nouveau'].map(t => `<option value="${t}" ${s.type===t?'selected':''}>${t==='adulte'?'Adulte':t==='ado'?'Adolescent':'Nouvel élève'}</option>`).join('');
+    const countryOptions = Object.keys(COUNTRY_LABELS).map(c => `<option value="${c}" ${s.country===c?'selected':''}>${COUNTRY_FLAGS[c]} ${COUNTRY_LABELS[c]}</option>`).join('');
+    const usCityOptions = Object.keys(US_CITIES).map(tz => `<option value="${tz}" ${((s.usTz||'America/New_York')===tz)?'selected':''}>${US_CITIES[tz]}</option>`).join('');
+    return `
+      <div class="edit-panel">
+        <select data-action="set-type">${typeOptions}</select>
+        <select data-action="set-country">${countryOptions}</select>
+        ${s.country === 'usa' ? `<select data-action="set-us-city">${usCityOptions}</select>` : ''}
+        ${subjectChips}
+      </div>`;
+  }
+
+  function renderDay(day) {
+    const slots = DAYS_DATA[day] || [];
+    const overlaps = dayOverlaps(slots);
+    const slotsHtml = slots.length
+      ? slots.map((s, i) => {
+          const dur = (parseTime(s.start) !== null && parseTime(s.end) !== null)
+            ? formatDuration(parseTime(s.end) - parseTime(s.start))
+            : '—';
+          const presence = s.presence || 'prevu';
+          const status = s.status || (s.type === 'nouveau' ? 'a_confirmer' : 'confirme');
+          return `
+            <div class="slot type-${s.type || 'adulte'} ${overlaps[i] ? 'has-overlap' : ''}" data-day="${day}" data-index="${i}">
+              <div class="slot-info">
+                <div class="slot-top-row">
+                  <div class="slot-time">
+                    <input class="editable time-input" data-field="start" value="${escapeHtml(s.start)}">
+                    <span>–</span>
+                    <input class="editable time-input" data-field="end" value="${escapeHtml(s.end)}">
+                  </div>
+                  <span class="slot-duration">${dur}</span>
+                </div>
+                <div class="slot-label-row">
+                  <span>${COUNTRY_FLAGS[s.country] || '🏳️'}</span>
+                  <span class="slot-label"><input class="editable name-input" data-field="label" value="${escapeHtml(s.label)}"></span>
+                </div>
+                ${subjectsText(s.subjects) ? `<div class="slot-subjects">${subjectsText(s.subjects)}</div>` : ''}
+                ${tzBoxHtml(s)}
+                <div class="badges-row">
+                  <button class="badge-btn badge-presence ${presence}" data-action="cycle-presence">${PRESENCE_LABELS[presence]}</button>
+                  <button class="badge-btn badge-status ${status}" data-action="cycle-status">${STATUS_LABELS[status]}</button>
+                </div>
+                ${overlaps[i] ? '<div class="overlap-warning">⚠ Chevauchement</div>' : ''}
+                ${editPanelHtml(day, i, s)}
+              </div>
+              <button class="del-btn" data-action="del">✕</button>
+            </div>`;
+        }).join('')
+      : '<div class="empty-day">Aucun cours ce jour</div>';
+
+    return `
+      <div class="day-card" data-day="${day}">
+        <div class="day-header">
+          <div class="day-header-top">
+            <span class="day-name">${day}</span>
+            <span class="day-count">${slots.length} créneau${slots.length > 1 ? 'x' : ''}</span>
+          </div>
+          <div class="day-summary">${daySummary(slots)}</div>
+        </div>
+        <div class="slots">${slotsHtml}</div>
+        <button class="add-slot-btn" data-action="add" data-day="${day}">+ Ajouter un créneau</button>
+      </div>`;
+  }
+
+  function renderAll() {
+    document.getElementById('daysContainer').innerHTML = DAY_ORDER.map(renderDay).join('');
+    renderStats();
+    highlightToday();
+    applyTodayView();
+    renderFreeHours();
+    renderAvailList();
+    renderStudentSelect();
+  }
+
+  function getTodayName() {
+    const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    return jours[new Date().getDay()];
+  }
+
+  function highlightToday() {
+    const today = getTodayName();
+    document.querySelectorAll('.day-card').forEach(card => {
+      if (card.dataset.day === today) {
+        card.style.border = '1.5px solid var(--or)';
+        card.querySelector('.day-header').style.background = 'rgba(201,168,76,0.15)';
+      } else {
+        card.style.border = '';
+        card.querySelector('.day-header').style.background = '';
+      }
+    });
+  }
+
+  function applyTodayView() {
+    const today = getTodayName();
+    document.querySelectorAll('.day-card').forEach(card => {
+      card.classList.toggle('hidden-not-today', todayViewActive && card.dataset.day !== today);
+    });
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ days: DAYS_DATA, availability: AVAILABILITY, settings: SETTINGS }));
+    } catch (e) {
+      showToast('Erreur de sauvegarde ⚠️', true);
+    }
+  }
+
+  function migrateSlot(s) {
+    // Ajoute les nouveaux champs sans jamais toucher horaires/noms déjà enregistrés.
+    if (!s.type) {
+      if (s.cls === 'sn-ado') s.type = 'ado';
+      else if (s.cls === 'nouveau') s.type = 'nouveau';
+      else s.type = 'adulte';
+    }
+    if (!s.country) {
+      if (s.cls === 'usa') s.country = 'usa';
+      else if (s.cls === 'italie') s.country = 'italie';
+      else s.country = 'senegal';
+    }
+    if (!s.subjects) s.subjects = [];
+    if (!s.presence) s.presence = 'prevu';
+    if (!s.status) s.status = (s.type === 'nouveau' ? 'a_confirmer' : 'confirme');
+    delete s.cls;
+    return s;
+  }
+
+  function loadData() {
+    let raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        DAYS_DATA = parsed.days || DAYS_DATA;
+        AVAILABILITY = parsed.availability || [];
+        SETTINGS = Object.assign({ whatsapp: '', workStart: '08h00', workEnd: '22h00' }, parsed.settings || {});
+        DAY_ORDER.forEach(day => { (DAYS_DATA[day] || []).forEach(migrateSlot); });
+        return;
+      } catch (e) {}
+    }
+    // Anciennes sauvegardes (v2/v3) à migrer si elles existent, pour ne rien perdre.
+    for (const key of OLD_KEYS) {
+      let old;
+      try { old = localStorage.getItem(key); } catch (e) { old = null; }
+      if (!old) continue;
+      try {
+        const parsed = JSON.parse(old);
+        DAY_ORDER.forEach(day => { (parsed[day] || []).forEach(migrateSlot); });
+        DAYS_DATA = parsed;
+        saveData();
+        return;
+      } catch (e) {}
+    }
+  }
+
+  function toggleEdit() {
+    const body = document.body;
+    const btn = document.getElementById('editToggle');
+    body.classList.toggle('editing');
+    if (body.classList.contains('editing')) {
+      btn.textContent = '✅ Terminer';
+      btn.classList.add('active');
+      showToast('Mode modification activé');
+    } else {
+      btn.textContent = '✏️ Modifier le planning';
+      btn.classList.remove('active');
+      saveData();
+      showToast('Modifications enregistrées ✓');
+    }
+  }
+
+  document.getElementById('editToggle').addEventListener('click', toggleEdit);
+
+  document.getElementById('todayToggle').addEventListener('click', () => {
+    todayViewActive = !todayViewActive;
+    const btn = document.getElementById('todayToggle');
+    btn.classList.toggle('active', todayViewActive);
+    btn.textContent = todayViewActive ? '📅 Toute la semaine' : '📅 Aujourd\'hui';
+    applyTodayView();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (!confirm('Réinitialiser tout le planning sur cet appareil ? Cette action est irréversible.')) return;
+    DAYS_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    saveData();
+    renderAll();
+    showToast('Planning réinitialisé');
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(DAYS_DATA, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'planning-cours-sauvegarde.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Fichier exporté ✓');
+  });
+
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        DAY_ORDER.forEach(day => { (data[day] || []).forEach(migrateSlot); });
+        DAYS_DATA = data;
+        saveData();
+        renderAll();
+        showToast('Planning importé ✓');
+      } catch (err) {
+        showToast('Fichier invalide', true);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  function rerenderSlotDynamicParts(slotEl, day, idx) {
+    const s = DAYS_DATA[day][idx];
+    const dur = slotEl.querySelector('.slot-duration');
+    const a = parseTime(s.start), b = parseTime(s.end);
+    dur.textContent = (a !== null && b !== null) ? formatDuration(b - a) : '—';
+    const tzBox = slotEl.querySelector('.tz-box');
+    if (tzBox) tzBox.outerHTML = tzBoxHtml(s);
+    renderStats();
+    const dayCard = slotEl.closest('.day-card');
+    if (dayCard) {
+      dayCard.querySelector('.day-summary').textContent = daySummary(DAYS_DATA[day]);
+    }
+  }
+
+  document.getElementById('daysContainer').addEventListener('input', (e) => {
+    const el = e.target;
+    if (!el.classList.contains('editable')) return;
+    const slotEl = el.closest('.slot');
+    const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+    const field = el.dataset.field;
+    DAYS_DATA[day][idx][field] = el.value;
+    saveData();
+    rerenderSlotDynamicParts(slotEl, day, idx);
+  });
+
+  document.getElementById('daysContainer').addEventListener('change', (e) => {
+    const el = e.target;
+    const slotEl = el.closest('.slot');
+    if (!slotEl) return;
+    const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+    const s = DAYS_DATA[day][idx];
+    const action = el.dataset.action;
+    if (action === 'set-type') {
+      s.type = el.value;
+      saveData(); renderAll();
+    } else if (action === 'set-country') {
+      s.country = el.value;
+      saveData(); renderAll();
+    } else if (action === 'set-us-city') {
+      s.usTz = el.value;
+      saveData();
+      rerenderSlotDynamicParts(slotEl, day, idx);
+    }
+  });
+
+  document.getElementById('daysContainer').addEventListener('click', (e) => {
+    const delBtn = e.target.closest('[data-action="del"]');
+    if (delBtn) {
+      const slotEl = delBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      if (confirm('Supprimer ce créneau ?')) {
+        DAYS_DATA[day].splice(idx, 1);
+        saveData();
+        renderAll();
+      }
+      return;
+    }
+    const addBtn = e.target.closest('[data-action="add"]');
+    if (addBtn) {
+      const day = addBtn.dataset.day;
+      DAYS_DATA[day] = DAYS_DATA[day] || [];
+      DAYS_DATA[day].push({ start: '00h00', end: '00h00', label: 'Nouvel élève', type: 'nouveau', country: 'senegal', subjects: [], presence: 'prevu', status: 'a_confirmer' });
+      saveData();
+      renderAll();
+      const card = document.querySelector(`.day-card[data-day="${day}"] .slot:last-child .name-input`);
+      if (card) card.focus();
+      return;
+    }
+    const subjectBtn = e.target.closest('[data-action="toggle-subject"]');
+    if (subjectBtn) {
+      const slotEl = subjectBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      const s = DAYS_DATA[day][idx];
+      s.subjects = s.subjects || [];
+      const key = subjectBtn.dataset.subject;
+      const pos = s.subjects.indexOf(key);
+      if (pos >= 0) s.subjects.splice(pos, 1); else s.subjects.push(key);
+      saveData();
+      subjectBtn.classList.toggle('active');
+      const subjEl = slotEl.querySelector('.slot-subjects');
+      const text = subjectsText(s.subjects);
+      if (subjEl) {
+        subjEl.textContent = text;
+        subjEl.style.display = text ? '' : 'none';
+      } else if (text) {
+        const row = slotEl.querySelector('.slot-label-row');
+        row.insertAdjacentHTML('afterend', `<div class="slot-subjects">${text}</div>`);
+      }
+      return;
+    }
+    const presenceBtn = e.target.closest('[data-action="cycle-presence"]');
+    if (presenceBtn) {
+      const slotEl = presenceBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      const s = DAYS_DATA[day][idx];
+      const cur = PRESENCE_ORDER.indexOf(s.presence || 'prevu');
+      s.presence = PRESENCE_ORDER[(cur + 1) % PRESENCE_ORDER.length];
+      saveData();
+      presenceBtn.textContent = PRESENCE_LABELS[s.presence];
+      presenceBtn.className = 'badge-btn badge-presence ' + s.presence;
+      return;
+    }
+    const statusBtn = e.target.closest('[data-action="cycle-status"]');
+    if (statusBtn) {
+      const slotEl = statusBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      const s = DAYS_DATA[day][idx];
+      const cur = STATUS_ORDER.indexOf(s.status || 'confirme');
+      s.status = STATUS_ORDER[(cur + 1) % STATUS_ORDER.length];
+      saveData();
+      statusBtn.textContent = STATUS_LABELS[s.status];
+      statusBtn.className = 'badge-btn badge-status ' + s.status;
+      return;
+    }
+  });
+
+  // ============================================================
+  // VIEW TABS
+  // ============================================================
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    });
+  });
+
+  // ============================================================
+  // HEURES LIBRES
+  // ============================================================
+  function blockStatus(day, blockStart, blockEnd) {
+    const slots = DAYS_DATA[day] || [];
+    let status = 'libre';
+    for (const s of slots) {
+      const a = parseTime(s.start), b = parseTime(s.end);
+      if (a === null || b === null) continue;
+      if (blockStart < b && a < blockEnd) {
+        if ((s.status || 'confirme') === 'a_confirmer') return 'a_confirmer';
+        status = 'occupe';
+      }
+    }
+    return status;
+  }
+
+  function minutesToLabel(mins) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return String(h).padStart(2, '0') + 'h' + String(m).padStart(2, '0');
+  }
+
+  function isBlockPublished(day, blockStart, blockEnd) {
+    return AVAILABILITY.some(a => a.day === day && parseTime(a.start) <= blockStart && parseTime(a.end) >= blockEnd);
+  }
+
+  function renderFreeHours() {
+    const container = document.getElementById('freeHoursContainer');
+    if (!container) return;
+    const step = 30;
+    const wStart = parseTime(SETTINGS.workStart) ?? 480;
+    const wEnd = parseTime(SETTINGS.workEnd) ?? 1320;
+    container.innerHTML = DAY_ORDER.map(day => {
+      let blocksHtml = '';
+      for (let t = wStart; t < wEnd; t += step) {
+        const status = blockStatus(day, t, t + step);
+        const published = status === 'libre' && isBlockPublished(day, t, t + step);
+        const key = day + '|' + t;
+        const selected = selectedFreeBlocks.has(key);
+        blocksHtml += `<div class="free-block ${status} ${selected ? 'selected' : ''} ${published ? 'already-published' : ''}" data-day="${day}" data-start="${t}" data-end="${t + step}">
+          ${minutesToLabel(t)}${status === 'libre' ? ' 🟢' : status === 'a_confirmer' ? ' 🟡' : ' 🔴'}
+        </div>`;
+      }
+      return `<div class="free-day-block"><div class="free-day-title">${day}</div><div class="free-grid">${blocksHtml}</div></div>`;
+    }).join('');
+  }
+
+  document.getElementById('freeHoursContainer').addEventListener('click', (e) => {
+    const block = e.target.closest('.free-block.libre');
+    if (!block) return;
+    const key = block.dataset.day + '|' + block.dataset.start;
+    if (selectedFreeBlocks.has(key)) selectedFreeBlocks.delete(key);
+    else selectedFreeBlocks.add(key);
+    block.classList.toggle('selected');
+    updateSelectionBar();
+  });
+
+  function updateSelectionBar() {
+    let bar = document.getElementById('selectionBar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'selectionBar';
+      bar.className = 'selection-bar';
+      bar.innerHTML = `<span id="selCount"></span><button class="mini-btn primary" id="addSelToAvail">➕ Ajouter aux disponibilités</button>`;
+      document.body.appendChild(bar);
+      document.getElementById('addSelToAvail').addEventListener('click', addSelectedToAvailability);
+    }
+    if (selectedFreeBlocks.size > 0) {
+      bar.classList.add('show');
+      document.getElementById('selCount').textContent = selectedFreeBlocks.size + ' créneau(x) sélectionné(s)';
+    } else {
+      bar.classList.remove('show');
+    }
+  }
+
+  function addSelectedToAvailability() {
+    // Regrouper par jour, fusionner les blocs consécutifs en plages continues.
+    const byDay = {};
+    selectedFreeBlocks.forEach(key => {
+      const [day, start] = key.split('|');
+      byDay[day] = byDay[day] || [];
+      byDay[day].push(parseInt(start, 10));
+    });
+    Object.keys(byDay).forEach(day => {
+      const starts = byDay[day].sort((a, b) => a - b);
+      let rangeStart = starts[0], prev = starts[0];
+      const flush = (end) => {
+        AVAILABILITY.push({ id: 'av_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), day, start: minutesToLabel(rangeStart), end: minutesToLabel(end) });
+      };
+      for (let i = 1; i <= starts.length; i++) {
+        if (i < starts.length && starts[i] === prev + 30) {
+          prev = starts[i];
+          continue;
+        }
+        flush(prev + 30);
+        if (i < starts.length) { rangeStart = starts[i]; prev = starts[i]; }
+      }
+    });
+    selectedFreeBlocks.clear();
+    saveData();
+    renderFreeHours();
+    renderAvailList();
+    updateSelectionBar();
+    showToast('Ajouté aux disponibilités ✓');
+  }
+
+  // ============================================================
+  // GESTION DES DISPONIBILITES PUBLIEES
+  // ============================================================
+  function renderAvailList() {
+    const container = document.getElementById('availList');
+    if (!container) return;
+    if (AVAILABILITY.length === 0) {
+      container.innerHTML = '<p style="font-size:0.72rem;color:var(--gris);font-style:italic;">Aucune disponibilité publiée pour l\'instant.</p>';
+      return;
+    }
+    container.innerHTML = AVAILABILITY.map(a => `
+      <div class="avail-list-item" data-id="${a.id}">
+        <span class="info">${a.day} · ${a.start}–${a.end}</span>
+        <div class="actions">
+          <button class="mini-btn primary" data-action="reserve-avail">✅ Réserver</button>
+          <button class="mini-btn danger" data-action="del-avail">🗑</button>
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('availList').addEventListener('click', (e) => {
+    const item = e.target.closest('.avail-list-item');
+    if (!item) return;
+    const id = item.dataset.id;
+    const avail = AVAILABILITY.find(a => a.id === id);
+    if (e.target.closest('[data-action="del-avail"]')) {
+      if (confirm('Supprimer cette disponibilité ?')) {
+        AVAILABILITY = AVAILABILITY.filter(a => a.id !== id);
+        saveData();
+        renderAvailList();
+        renderFreeHours();
+      }
+      return;
+    }
+    if (e.target.closest('[data-action="reserve-avail"]')) {
+      const name = prompt('Nom de l\'élève à inscrire sur ce créneau :');
+      if (!name) return;
+      const countryChoice = prompt('Pays de l\'élève : sénégal, france, italie ou usa ?', 'senegal');
+      const country = ['senegal','france','italie','usa'].includes((countryChoice||'').toLowerCase()) ? countryChoice.toLowerCase() : 'senegal';
+      DAYS_DATA[avail.day] = DAYS_DATA[avail.day] || [];
+      DAYS_DATA[avail.day].push({
+        start: avail.start, end: avail.end, label: name,
+        type: 'nouveau', country, subjects: [], presence: 'prevu', status: 'a_confirmer'
+      });
+      AVAILABILITY = AVAILABILITY.filter(a => a.id !== id);
+      saveData();
+      renderAll();
+      showToast(name + ' réservé(e) sur ' + avail.day + ' ✓');
+    }
+  });
+
+  // ============================================================
+  // PARAMETRES (whatsapp / plage horaire)
+  // ============================================================
+  document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+    SETTINGS.whatsapp = document.getElementById('whatsappInput').value.replace(/\D/g, '');
+    SETTINGS.workStart = document.getElementById('workStartInput').value.trim() || '08h00';
+    SETTINGS.workEnd = document.getElementById('workEndInput').value.trim() || '22h00';
+    saveData();
+    renderFreeHours();
+    showToast('Paramètres enregistrés ✓');
+  });
+
+  function fillSettingsForm() {
+    document.getElementById('whatsappInput').value = SETTINGS.whatsapp || '';
+    document.getElementById('workStartInput').value = SETTINGS.workStart || '08h00';
+    document.getElementById('workEndInput').value = SETTINGS.workEnd || '22h00';
+  }
+
+  // ============================================================
+  // ENVOYER MES DISPONIBILITES (lien + message)
+  // ============================================================
+  function buildAvailLink() {
+    const payload = { wa: SETTINGS.whatsapp || '', slots: AVAILABILITY.map(a => ({ day: a.day, start: a.start, end: a.end })) };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    const base = location.origin + location.pathname;
+    return base + '?dispo=' + encoded;
+  }
+
+  document.getElementById('shareAvailBtn').addEventListener('click', async () => {
+    if (AVAILABILITY.length === 0) { showToast('Ajoute d\'abord des disponibilités', true); return; }
+    if (!SETTINGS.whatsapp) { showToast('Indique ton numéro WhatsApp d\'abord ⚠️', true); return; }
+    const link = buildAvailLink();
+    let text = '📅 Disponibilités pour les nouveaux élèves — Seyda Zeynab Academy\n\n';
+    const byDay = {};
+    AVAILABILITY.forEach(a => { byDay[a.day] = byDay[a.day] || []; byDay[a.day].push(a); });
+    DAY_ORDER.forEach(day => {
+      if (!byDay[day]) return;
+      text += day + ' :\n';
+      byDay[day].forEach(a => { text += `🟢 ${a.start}–${a.end}\n`; });
+      text += '\n';
+    });
+    text += 'Choisis ton créneau ici : ' + link;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Disponibilités - Seyda Zeynab Academy', text }); return; } catch (e) {}
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copié ! Colle-le dans WhatsApp 📋');
+    } catch (e) {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+  });
+
+  // ============================================================
+  // EMPLOI DU TEMPS INDIVIDUEL PAR ELEVE
+  // ============================================================
+  function getAllStudentNames() {
+    const map = new Map();
+    allSlots().forEach(s => {
+      const key = normalizeLabel(s.label);
+      if (!map.has(key)) map.set(key, s.label);
+    });
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+  }
+
+  function renderStudentSelect() {
+    const sel = document.getElementById('studentSelect');
+    if (!sel) return;
+    const current = sel.value;
+    const names = getAllStudentNames();
+    sel.innerHTML = '<option value="">— Choisir un élève —</option>' + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    if (names.includes(current)) sel.value = current;
+    renderStudentSchedule();
+  }
+
+  function studentSlots(name) {
+    const key = normalizeLabel(name);
+    const out = [];
+    DAY_ORDER.forEach(day => {
+      (DAYS_DATA[day] || []).forEach(s => { if (normalizeLabel(s.label) === key) out.push(Object.assign({ day }, s)); });
+    });
+    return out;
+  }
+
+  function renderStudentSchedule() {
+    const box = document.getElementById('studentScheduleBox');
+    const sel = document.getElementById('studentSelect');
+    if (!box || !sel) return;
+    const name = sel.value;
+    if (!name) { box.innerHTML = ''; return; }
+    const slots = studentSlots(name);
+    box.innerHTML = slots.map(s => {
+      const dur = (parseTime(s.start) !== null && parseTime(s.end) !== null) ? formatDuration(parseTime(s.end) - parseTime(s.start)) : '—';
+      const localLine = s.country && s.country !== 'senegal'
+        ? `<div class="line">${COUNTRY_FLAGS[s.country]} Heure locale : ${convertTime(s.start, s.country === 'usa' ? (s.usTz || 'America/New_York') : s.country === 'italie' ? 'Europe/Rome' : 'Europe/Paris')}–${convertTime(s.end, s.country === 'usa' ? (s.usTz || 'America/New_York') : s.country === 'italie' ? 'Europe/Rome' : 'Europe/Paris')}</div>`
+        : '';
+      return `<div class="student-slot-row">
+        <div class="day">${s.day}</div>
+        <div class="line">🇸🇳 Dakar : ${s.start}–${s.end} (${dur})</div>
+        ${localLine}
+        ${subjectsText(s.subjects) ? `<div class="line">${subjectsText(s.subjects)}</div>` : ''}
+        <div class="line">${STATUS_LABELS[s.status || 'confirme']}</div>
+      </div>`;
+    }).join('') || '<p style="font-size:0.72rem;color:var(--gris);">Aucun créneau pour cet élève.</p>';
+  }
+
+  document.getElementById('studentSelect').addEventListener('change', renderStudentSchedule);
+
+  function buildStudentText(name) {
+    const slots = studentSlots(name);
+    let text = `📘 Emploi du temps — ${name}\nSeyda Zeynab Academy\n\n`;
+    slots.forEach(s => {
+      const dur = (parseTime(s.start) !== null && parseTime(s.end) !== null) ? formatDuration(parseTime(s.end) - parseTime(s.start)) : '—';
+      text += `${s.day} : ${s.start}–${s.end} (Dakar, ${dur})`;
+      if (s.country && s.country !== 'senegal') {
+        const tz = s.country === 'usa' ? (s.usTz || 'America/New_York') : s.country === 'italie' ? 'Europe/Rome' : 'Europe/Paris';
+        text += ` · ${COUNTRY_FLAGS[s.country]} heure locale : ${convertTime(s.start, tz)}–${convertTime(s.end, tz)}`;
+      }
+      if (subjectsText(s.subjects)) text += ` · ${subjectsText(s.subjects)}`;
+      text += '\n';
+    });
+    return text;
+  }
+
+  function drawScheduleCanvas(name) {
+    const slots = studentSlots(name);
+    const canvas = document.getElementById('scheduleCanvas');
+    const rowH = 74, headerH = 90, footerH = 40, width = 720;
+    canvas.width = width;
+    canvas.height = headerH + slots.length * rowH + footerH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0f2b1c';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#c9a84c';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
+    ctx.fillStyle = '#c9a84c';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('📘 Emploi du temps', width / 2, 40);
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(name, width / 2, 68);
+    ctx.textAlign = 'left';
+    let y = headerH;
+    slots.forEach(s => {
+      const dur = (parseTime(s.start) !== null && parseTime(s.end) !== null) ? formatDuration(parseTime(s.end) - parseTime(s.start)) : '—';
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(20, y, width - 40, rowH - 10);
+      ctx.fillStyle = '#c9a84c';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(s.day, 34, y + 26);
+      ctx.fillStyle = '#f4edda';
+      ctx.font = '15px sans-serif';
+      ctx.fillText(`🇸🇳 Dakar : ${s.start}–${s.end} (${dur})`, 34, y + 48);
+      let line3 = subjectsText(s.subjects) || '';
+      if (s.country && s.country !== 'senegal') {
+        const tz = s.country === 'usa' ? (s.usTz || 'America/New_York') : s.country === 'italie' ? 'Europe/Rome' : 'Europe/Paris';
+        line3 += (line3 ? '  ·  ' : '') + `${COUNTRY_FLAGS[s.country]} ${convertTime(s.start, tz)}–${convertTime(s.end, tz)}`;
+      }
+      if (line3) { ctx.fillStyle = '#8aab96'; ctx.font = '13px sans-serif'; ctx.fillText(line3, 34, y + 64); }
+      y += rowH;
+    });
+    ctx.fillStyle = '#8aab96';
+    ctx.font = 'italic 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Seyda Zeynab Academy', width / 2, canvas.height - 16);
+    return canvas;
+  }
+
+  document.getElementById('shareScheduleBtn').addEventListener('click', async () => {
+    const name = document.getElementById('studentSelect').value;
+    if (!name) { showToast('Choisis d\'abord un élève', true); return; }
+    const canvas = drawScheduleCanvas(name);
+    const text = buildStudentText(name);
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'emploi-du-temps.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: 'Emploi du temps', text }); return; } catch (e) {}
+      }
+      // Fallback : téléchargement de l'image + partage du texte
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'emploi-du-temps-' + name.replace(/\s+/g, '-') + '.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Emploi du temps', text }); } catch (e) {}
+      } else {
+        try { await navigator.clipboard.writeText(text); showToast('Image téléchargée + texte copié 📋'); }
+        catch (e) { showToast('Image téléchargée ✓'); }
+      }
+    }, 'image/png');
+  });
+
+  // ============================================================
+  // VUE ELEVE (lien ?dispo=...) — sélection de créneau par le nouvel élève
+  // ============================================================
+  function renderPickerView() {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('dispo');
+    if (!raw) return false;
+    let payload;
+    try {
+      payload = JSON.parse(decodeURIComponent(escape(atob(raw))));
+    } catch (e) {
+      return false;
+    }
+    document.getElementById('teacherApp').style.display = 'none';
+    document.getElementById('bottomOrnament').style.display = 'none';
+    const slots = payload.slots || [];
+    const wa = payload.wa || '';
+    const wrap = document.getElementById('pickerView');
+    wrap.innerHTML = `
+      <div class="picker-wrap">
+        <div class="picker-card">
+          <h2>📅 Choisissez votre créneau</h2>
+          <div class="sub">Seyda Zeynab Academy</div>
+          <div class="picker-field">
+            <label>Votre nom</label>
+            <input type="text" id="pkName" placeholder="Votre nom complet">
+          </div>
+          <div class="picker-field">
+            <label>Votre pays</label>
+            <select id="pkCountry">
+              <option value="senegal">🇸🇳 Sénégal</option>
+              <option value="france">🇫🇷 France</option>
+              <option value="italie">🇮🇹 Italie</option>
+              <option value="usa">🇺🇸 USA</option>
+            </select>
+          </div>
+          <div id="pkSlots"></div>
+          <button class="picker-submit" id="pkSubmit">✅ Confirmer mon choix</button>
+          <a class="picker-back" href="${location.origin + location.pathname}">🔙 Retour au planning</a>
+        </div>
+      </div>`;
+
+    function tzFor(country) {
+      return country === 'usa' ? 'America/New_York' : country === 'italie' ? 'Europe/Rome' : country === 'france' ? 'Europe/Paris' : null;
+    }
+
+    function renderSlotOptions() {
+      const country = document.getElementById('pkCountry').value;
+      const tz = tzFor(country);
+      document.getElementById('pkSlots').innerHTML = slots.map((s, i) => {
+        const local = tz ? `<span class="local">${COUNTRY_FLAGS[country]} votre heure locale : ${convertTime(s.start, tz)}–${convertTime(s.end, tz)}</span>` : '';
+        return `<label class="picker-slot" data-i="${i}">
+          <input type="radio" name="pkChoice" value="${i}">
+          <span><span class="txt">${s.day} ${s.start}–${s.end}</span>${local}</span>
+        </label>`;
+      }).join('') || '<p style="font-size:0.78rem;color:var(--gris);">Aucun créneau disponible pour le moment.</p>';
+      document.querySelectorAll('.picker-slot').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.picker-slot').forEach(x => x.classList.remove('chosen'));
+          el.classList.add('chosen');
+          el.querySelector('input').checked = true;
+        });
+      });
+    }
+    document.getElementById('pkCountry').addEventListener('change', renderSlotOptions);
+    renderSlotOptions();
+
+    document.getElementById('pkSubmit').addEventListener('click', () => {
+      const name = document.getElementById('pkName').value.trim();
+      const country = document.getElementById('pkCountry').value;
+      const checked = document.querySelector('input[name="pkChoice"]:checked');
+      if (!name) { alert('Merci d\'indiquer votre nom.'); return; }
+      if (!checked) { alert('Merci de choisir un créneau.'); return; }
+      const s = slots[parseInt(checked.value, 10)];
+      const msg = `Bonjour, je choisis le créneau : ${s.day} ${s.start}–${s.end} (heure Dakar). Mon nom : ${name}. Je suis en : ${COUNTRY_LABELS[country]}.`;
+      if (wa) {
+        window.location.href = 'https://wa.me/' + wa + '?text=' + encodeURIComponent(msg);
+      } else {
+        alert('Le numéro WhatsApp de l\'enseignante n\'est pas configuré dans ce lien. Message à copier :\n\n' + msg);
+      }
+    });
+    return true;
+  }
+
+  // ============================================================
+  // INITIALISATION
+  // ============================================================
+  loadData();
+  fillSettingsForm();
+  const isPicker = renderPickerView();
+  if (!isPicker) {
+    renderAll();
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+
+</body>
+</html>
