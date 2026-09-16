@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Planning Cours — Seyda Zeynab</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a4a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Planning Cours">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
+    :root {
+      --vert: #1a4a2e;
+      --vert-clair: #2d6e47;
+      --or: #c9a84c;
+      --or-pale: #f0dfa0;
+      --fond: #0f2b1c;
+      --carte: #163825;
+      --texte: #f4edda;
+      --gris: #8aab96;
+      --danger: #e07070;
+
+      /* Couleurs par TYPE d'élève (bordure de la carte) */
+      --type-adulte: #c9a84c;
+      --type-ado: #9b6fd9;
+      --type-nouveau: #e67e22;
+
+      /* Couleurs de présence */
+      --presence-present: #4caf7d;
+      --presence-absent: #e07070;
+      --presence-reporte: #e8973a;
+      --presence-prevu: #5b7268;
+
+      /* Couleurs de statut */
+      --status-confirme: #4caf7d;
+      --status-a-confirmer: #e0c34a;
+      --status-a-reprogrammer: #e07070;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--fond);
+      font-family: 'Nunito', sans-serif;
+      color: var(--texte);
+      min-height: 100vh;
+      padding: 0 0 50px 0;
+    }
+
+    .app-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--vert) 0%, #0f2b1c 100%);
+      border-bottom: 2px solid var(--or);
+      padding: 20px 20px 14px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.45rem;
+      color: var(--or);
+      letter-spacing: 0.05em;
+    }
+
+    header p {
+      font-size: 0.72rem;
+      color: var(--gris);
+      margin-top: 4px;
+    }
+
+    .header-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid var(--or);
+      color: var(--or-pale);
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .pill-btn.active {
+      background: var(--or);
+      color: #0f2b1c;
+    }
+
+    /* ===== RESUME HEBDOMADAIRE ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 8px;
+      padding: 12px 14px;
+      background: rgba(201,168,76,0.06);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .stat-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .stat-chip .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--or);
+      display: block;
+      line-height: 1.1;
+    }
+
+    .stat-chip .stat-label {
+      font-size: 0.6rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* ===== LEGENDE ===== */
+    .legend {
+      padding: 12px 16px;
+      background: var(--carte);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .legend-row:last-child { margin-bottom: 0; }
+
+    .legend-title {
+      font-size: 0.6rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      color: var(--gris);
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ===== TODAY VIEW ===== */
+    .day-card.hidden-not-today { display: none; }
+
+    /* ===== DAYS ===== */
+    .days-container {
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @media (min-width: 720px) {
+      .days-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        align-items: start;
+      }
+    }
+
+    .day-card {
+      background: var(--carte);
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.15);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    .day-header {
+      padding: 12px 16px;
+      background: rgba(201,168,76,0.08);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .day-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .day-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--or);
+      letter-spacing: 0.04em;
+    }
+
+    .day-count {
+      font-size: 0.65rem;
+      background: rgba(201,168,76,0.15);
+      color: var(--or-pale);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    .day-summary {
+      font-size: 0.65rem;
+      color: var(--gris);
+      margin-top: 4px;
+    }
+
+    .slots {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .empty-day {
+      padding: 14px 12px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--gris);
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    .slot {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border-left: 4px solid;
+      background: rgba(255,255,255,0.04);
+      position: relative;
+    }
+
+    .slot.type-adulte { border-color: var(--type-adulte); }
+    .slot.type-ado { border-color: var(--type-ado); }
+    .slot.type-nouveau { border-color: var(--type-nouveau); }
+    .slot.has-overlap { background: rgba(224,112,112,0.08); }
+
+    .slot-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .slot-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .slot-time {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--texte);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .slot-label-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .slot-label {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .slot-subjects {
+      font-size: 0.74rem;
+      color: var(--or-pale);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .tz-box {
+      margin-top: 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 8px;
+      padding: 6px 9px;
+    }
+
+    .tz-line {
+      font-size: 0.68rem;
+      color: var(--gris);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tz-line b { color: var(--or-pale); font-weight: 700; }
+
+    .badges-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 7px;
+      flex-wrap: wrap;
+    }
+
+    .badge-btn {
+      border: none;
+      border-radius: 20px;
+      padding: 4px 9px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-presence.prevu { background: var(--presence-prevu); }
+    .badge-presence.present { background: var(--presence-present); }
+    .badge-presence.absent { background: var(--presence-absent); }
+    .badge-presence.reporte { background: var(--presence-reporte); }
+
+    .badge-status.confirme { background: var(--status-confirme); }
+    .badge-status.a_confirmer { background: var(--status-a-confirmer); color:#3a2f0a; }
+    .badge-status.a_reprogrammer { background: var(--status-a-reprogrammer); }
+
+    .slot-duration {
+      font-size: 0.65rem;
+      background: rgba(255,255,255,0.07);
+      padding: 2px 7px;
+      border-radius: 8px;
+      color: var(--gris);
+      flex-shrink: 0;
+    }
+
+    .del-btn {
+      background: rgba(224,112,112,0.15);
+      color: #e88;
+      border: 1px solid rgba(224,112,112,0.3);
+      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.editing .del-btn { display: flex; }
+
+    .editable {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      width: auto;
+      padding: 2px 4px;
+      border-radius: 5px;
+    }
+
+    body.editing .editable {
+      background: rgba(255,255,255,0.08);
+      border: 1px dashed rgba(201,168,76,0.5);
+      cursor: text;
+    }
+
+    body.editing .editable:focus {
+      outline: none;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid var(--or);
+    }
+
+    .time-input { width: 52px; text-align: center; }
+    .name-input { width: 100%; }
+
+    .edit-panel {
+      display: none;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(201,168,76,0.25);
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    body.editing .edit-panel { display: flex; }
+
+    .edit-panel select {
+      background: rgba(255,255,255,0.08);
+      border: 1px dashed rgba(201,168,76,0.5);
+      color: var(--texte);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.66rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+
+    .subject-chip {
+      font-size: 0.62rem;
+      padding: 4px 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.35);
+      background: rgba(255,255,255,0.03);
+      color: var(--gris);
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+    }
+
+    .subject-chip.active {
+      background: var(--or);
+      color: #0f2b1c;
+      border-color: var(--or);
+    }
+
+    .add-slot-btn {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      background: rgba(201,168,76,0.08);
+      border: 1px dashed rgba(201,168,76,0.4);
+      color: var(--or-pale);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      margin-top: 4px;
+    }
+
+    body.editing .add-slot-btn { display: block; }
+
+    .alarm-section {
+      margin: 6px 14px 0;
+      background: var(--carte);
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.15);
+      padding: 16px;
+    }
+
+    .alarm-section h3 {
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--or);
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .alarm-section p {
+      font-size: 0.7rem;
+      color: var(--gris);
+      line-height: 1.5;
+    }
+
+    .action-row {
+      display: none;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    body.editing .action-row { display: flex; }
+
+    .action-btn {
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: var(--or-pale);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .action-btn.danger {
+      background: rgba(224,112,112,0.1);
+      border-color: rgba(224,112,112,0.3);
+      color: #e88;
+    }
+
+    .ornament {
+      text-align: center;
+      color: var(--or);
+      font-size: 1.2rem;
+      padding: 16px 0 4px;
+      opacity: 0.5;
+    }
+
+    .overlap-warning {
+      font-size: 0.65rem;
+      color: var(--danger);
+      background: rgba(224,112,112,0.1);
+      border: 1px solid rgba(224,112,112,0.2);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--vert-clair);
+      color: white;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--danger); }
+  </style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+<header>
+  <h1>📚 Planning Cours en Ligne</h1>
+  <p>Seyda Zeynab Academy · Heure de référence : Dakar (GMT)</p>
+  <div class="header-actions">
+    <button class="pill-btn" id="todayToggle">📅 Aujourd'hui</button>
+    <button class="pill-btn" id="editToggle">✏️ Modifier le planning</button>
+  </div>
+</header>
+
+<div class="stats-grid" id="statsBar"></div>
+
+<div class="legend">
+  <div class="legend-title">Type d'élève (couleur)</div>
+  <div class="legend-row">
+    <div class="legend-item"><div class="dot" style="background:var(--type-adulte)"></div> Adulte</div>
+    <div class="legend-item"><div class="dot" style="background:var(--type-ado)"></div> Adolescent</div>
+    <div class="legend-item"><div class="dot" style="background:var(--type-nouveau)"></div> Nouvel élève</div>
+  </div>
+  <div class="legend-title">Pays (drapeau)</div>
+  <div class="legend-row">
+    <div class="legend-item">🇸🇳 Sénégal</div>
+    <div class="legend-item">🇫🇷 France</div>
+    <div class="legend-item">🇮🇹 Italie</div>
+    <div class="legend-item">🇺🇸 USA</div>
+  </div>
+</div>
+
+<div class="days-container" id="daysContainer"></div>
+
+<div class="alarm-section">
+  <h3>💾 Sauvegarde</h3>
+  <p>Toutes tes modifications sont enregistrées automatiquement sur cet appareil. Comme chaque téléphone/navigateur a sa propre sauvegarde, utilise "Exporter" pour créer un fichier de secours et "Importer" pour le charger sur un autre appareil.</p>
+  <div class="action-row">
+    <button class="action-btn" id="exportBtn">⬇️ Exporter</button>
+    <button class="action-btn" id="importBtn">⬆️ Importer</button>
+    <button class="action-btn danger" id="resetBtn">🗑 Réinitialiser</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json" style="display:none">
+</div>
+
+<div class="ornament">✦ بِسْمِ اللَّهِ ✦</div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'sz_planning_data_v3';
+  const OLD_STORAGE_KEY = 'sz_planning_data_v2';
+  const DAY_ORDER = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  const COUNTRY_FLAGS = { senegal: '🇸🇳', usa: '🇺🇸', italie: '🇮🇹', france: '🇫🇷' };
+  const COUNTRY_LABELS = { senegal: 'Sénégal', usa: 'USA', italie: 'Italie', france: 'France' };
+  const SUBJECTS = { coran: 'Coran', lecture: 'Lecture', arabe: 'Arabe', fiqh: 'Fiqh', tafsir: 'Tafsir', athkar: 'Athkar' };
+  const US_CITIES = {
+    'America/New_York': 'New York (Est)',
+    'America/Chicago': 'Chicago (Centre)',
+    'America/Denver': 'Denver (Montagne)',
+    'America/Los_Angeles': 'Los Angeles (Pacifique)',
+    'America/Phoenix': 'Phoenix (Arizona, sans DST)'
+  };
+  const PRESENCE_ORDER = ['prevu', 'present', 'absent', 'reporte'];
+  const PRESENCE_LABELS = { prevu: '⬜ Prévu', present: '🟢 Présent', absent: '🔴 Absent', reporte: '🟠 Reporté' };
+  const STATUS_ORDER = ['confirme', 'a_confirmer', 'a_reprogrammer'];
+  const STATUS_LABELS = { confirme: '🟢 Confirmé', a_confirmer: '🟡 À confirmer', a_reprogrammer: '🔴 À reprogrammer' };
+
+  // Données d'origine (horaires, noms, tarifs non modifiés) — classification enrichie ci-dessous.
+  const DEFAULT_DATA = {
+    Lundi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '15h00', end: '16h30', label: 'Ado Sénégal', type: 'ado', country: 'senegal' },
+      { start: '17h30', end: '19h00', label: 'Adulte Sénégal', type: 'adulte', country: 'senegal' },
+      { start: '20h00', end: '21h00', label: 'Elimane', type: 'nouveau', country: 'senegal' }
+    ],
+    Mardi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '15h00', end: '16h30', label: 'Ado Sénégal', type: 'ado', country: 'senegal' },
+      { start: '17h30', end: '19h00', label: 'Adulte Sénégal', type: 'adulte', country: 'senegal' }
+    ],
+    Mercredi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '17h30', end: '19h00', label: 'Adulte Sénégal', type: 'adulte', country: 'senegal' },
+      { start: '20h00', end: '21h00', label: 'Besse', type: 'nouveau', country: 'senegal' }
+    ],
+    Jeudi: [
+      { start: '12h00', end: '14h00', label: 'USA', type: 'adulte', country: 'usa' },
+      { start: '16h00', end: '18h00', label: 'Italie', type: 'adulte', country: 'italie' }
+    ],
+    Vendredi: [
+      { start: '12h00', end: '13h30', label: 'Ado Sénégal', type: 'ado', country: 'senegal' },
+      { start: '16h00', end: '18h00', label: 'Italie', type: 'adulte', country: 'italie' },
+      { start: '21h00', end: '22h00', label: 'Elimane', type: 'nouveau', country: 'senegal' }
+    ],
+    Samedi: [
+      { start: '10h00', end: '12h00', label: 'Italie', type: 'adulte', country: 'italie' }
+    ],
+    Dimanche: [
+      { start: '10h00', end: '12h00', label: 'Italie', type: 'adulte', country: 'italie' },
+      { start: '20h00', end: '21h00', label: 'Besse', type: 'nouveau', country: 'senegal' }
+    ]
+  };
+
+  let DAYS_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  let todayViewActive = false;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  function parseTime(str) {
+    const m = String(str || '').match(/(\d{1,2})h(\d{2})/);
+    if (!m) return null;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }
+
+  // Toutes les heures sont saisies en heure du Sénégal (GMT+0, pas de changement d'heure).
+  // Conversion automatique vers les autres fuseaux, avec prise en compte de l'heure d'été/hiver.
+  function convertTime(str, timeZone) {
+    const mins = parseTime(str);
+    if (mins === null) return null;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    const now = new Date();
+    const utcRef = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), h, m));
+    return utcRef.toLocaleTimeString('fr-FR', { timeZone, hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatDuration(mins) {
+    if (mins === null || mins <= 0) return '—';
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return m === 0 ? h + 'h' : h + 'h' + String(m).padStart(2, '0');
+  }
+
+  function dayOverlaps(slots) {
+    const flags = slots.map(() => false);
+    for (let i = 0; i < slots.length; i++) {
+      const a1 = parseTime(slots[i].start), a2 = parseTime(slots[i].end);
+      if (a1 === null || a2 === null) continue;
+      for (let j = i + 1; j < slots.length; j++) {
+        const b1 = parseTime(slots[j].start), b2 = parseTime(slots[j].end);
+        if (b1 === null || b2 === null) continue;
+        if (a1 < b2 && b1 < a2) { flags[i] = true; flags[j] = true; }
+      }
+    }
+    return flags;
+  }
+
+  function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function normalizeLabel(label) {
+    return String(label || '').trim().toLowerCase();
+  }
+
+  function allSlots() {
+    let out = [];
+    DAY_ORDER.forEach(day => { out = out.concat(DAYS_DATA[day] || []); });
+    return out;
+  }
+
+  function renderStats() {
+    const slots = allSlots();
+    let totalMins = 0;
+    const students = new Set();
+    const countries = new Set();
+    const nouveaux = new Set();
+    slots.forEach(s => {
+      const a = parseTime(s.start), b = parseTime(s.end);
+      if (a !== null && b !== null && b > a) totalMins += (b - a);
+      students.add(normalizeLabel(s.label));
+      if (s.country) countries.add(s.country);
+      if (s.type === 'nouveau') nouveaux.add(normalizeLabel(s.label));
+    });
+    const stats = [
+      { num: slots.length, label: 'Créneaux', icon: '📚' },
+      { num: formatDuration(totalMins), label: 'Heures', icon: '⏱️' },
+      { num: students.size, label: 'Élèves', icon: '👩‍🎓' },
+      { num: countries.size, label: 'Pays', icon: '🌍' },
+      { num: nouveaux.size, label: 'Nouveaux', icon: '🆕' }
+    ];
+    document.getElementById('statsBar').innerHTML = stats.map(s => `
+      <div class="stat-chip">
+        <span class="stat-num">${s.icon} ${s.num}</span>
+        <span class="stat-label">${s.label}</span>
+      </div>`).join('');
+  }
+
+  function daySummary(slots) {
+    let totalMins = 0;
+    const students = new Set();
+    slots.forEach(s => {
+      const a = parseTime(s.start), b = parseTime(s.end);
+      if (a !== null && b !== null && b > a) totalMins += (b - a);
+      students.add(normalizeLabel(s.label));
+    });
+    return `${slots.length} créneau${slots.length > 1 ? 'x' : ''} · ${students.size} élève${students.size > 1 ? 's' : ''} · ${formatDuration(totalMins)}`;
+  }
+
+  function subjectsText(subjects) {
+    if (!subjects || subjects.length === 0) return '';
+    return '📖 ' + subjects.map(k => SUBJECTS[k] || k).join(' + ');
+  }
+
+  function tzBoxHtml(s) {
+    const usTz = s.usTz || 'America/New_York';
+    return `
+      <div class="tz-box">
+        <div class="tz-line"><span>🇸🇳 Dakar</span><b>${escapeHtml(s.start)}–${escapeHtml(s.end)}</b></div>
+        <div class="tz-line"><span>🇫🇷 France</span><b>${convertTime(s.start, 'Europe/Paris') || '—'}–${convertTime(s.end, 'Europe/Paris') || '—'}</b></div>
+        <div class="tz-line"><span>🇮🇹 Italie</span><b>${convertTime(s.start, 'Europe/Rome') || '—'}–${convertTime(s.end, 'Europe/Rome') || '—'}</b></div>
+        <div class="tz-line"><span>🇺🇸 USA${s.country === 'usa' ? ' · ' + (US_CITIES[usTz] || usTz).split(' (')[0] : ''}</span><b>${convertTime(s.start, usTz) || '—'}–${convertTime(s.end, usTz) || '—'}</b></div>
+      </div>`;
+  }
+
+  function editPanelHtml(day, idx, s) {
+    const subjectChips = Object.keys(SUBJECTS).map(key => `
+      <button type="button" class="subject-chip ${((s.subjects||[]).includes(key)) ? 'active' : ''}" data-action="toggle-subject" data-subject="${key}">${SUBJECTS[key]}</button>
+    `).join('');
+    const typeOptions = ['adulte','ado','nouveau'].map(t => `<option value="${t}" ${s.type===t?'selected':''}>${t==='adulte'?'Adulte':t==='ado'?'Adolescent':'Nouvel élève'}</option>`).join('');
+    const countryOptions = Object.keys(COUNTRY_LABELS).map(c => `<option value="${c}" ${s.country===c?'selected':''}>${COUNTRY_FLAGS[c]} ${COUNTRY_LABELS[c]}</option>`).join('');
+    const usCityOptions = Object.keys(US_CITIES).map(tz => `<option value="${tz}" ${((s.usTz||'America/New_York')===tz)?'selected':''}>${US_CITIES[tz]}</option>`).join('');
+    return `
+      <div class="edit-panel">
+        <select data-action="set-type">${typeOptions}</select>
+        <select data-action="set-country">${countryOptions}</select>
+        ${s.country === 'usa' ? `<select data-action="set-us-city">${usCityOptions}</select>` : ''}
+        ${subjectChips}
+      </div>`;
+  }
+
+  function renderDay(day) {
+    const slots = DAYS_DATA[day] || [];
+    const overlaps = dayOverlaps(slots);
+    const slotsHtml = slots.length
+      ? slots.map((s, i) => {
+          const dur = (parseTime(s.start) !== null && parseTime(s.end) !== null)
+            ? formatDuration(parseTime(s.end) - parseTime(s.start))
+            : '—';
+          const presence = s.presence || 'prevu';
+          const status = s.status || (s.type === 'nouveau' ? 'a_confirmer' : 'confirme');
+          return `
+            <div class="slot type-${s.type || 'adulte'} ${overlaps[i] ? 'has-overlap' : ''}" data-day="${day}" data-index="${i}">
+              <div class="slot-info">
+                <div class="slot-top-row">
+                  <div class="slot-time">
+                    <input class="editable time-input" data-field="start" value="${escapeHtml(s.start)}">
+                    <span>–</span>
+                    <input class="editable time-input" data-field="end" value="${escapeHtml(s.end)}">
+                  </div>
+                  <span class="slot-duration">${dur}</span>
+                </div>
+                <div class="slot-label-row">
+                  <span>${COUNTRY_FLAGS[s.country] || '🏳️'}</span>
+                  <span class="slot-label"><input class="editable name-input" data-field="label" value="${escapeHtml(s.label)}"></span>
+                </div>
+                ${subjectsText(s.subjects) ? `<div class="slot-subjects">${subjectsText(s.subjects)}</div>` : ''}
+                ${tzBoxHtml(s)}
+                <div class="badges-row">
+                  <button class="badge-btn badge-presence ${presence}" data-action="cycle-presence">${PRESENCE_LABELS[presence]}</button>
+                  <button class="badge-btn badge-status ${status}" data-action="cycle-status">${STATUS_LABELS[status]}</button>
+                </div>
+                ${overlaps[i] ? '<div class="overlap-warning">⚠ Chevauchement</div>' : ''}
+                ${editPanelHtml(day, i, s)}
+              </div>
+              <button class="del-btn" data-action="del">✕</button>
+            </div>`;
+        }).join('')
+      : '<div class="empty-day">Aucun cours ce jour</div>';
+
+    return `
+      <div class="day-card" data-day="${day}">
+        <div class="day-header">
+          <div class="day-header-top">
+            <span class="day-name">${day}</span>
+            <span class="day-count">${slots.length} créneau${slots.length > 1 ? 'x' : ''}</span>
+          </div>
+          <div class="day-summary">${daySummary(slots)}</div>
+        </div>
+        <div class="slots">${slotsHtml}</div>
+        <button class="add-slot-btn" data-action="add" data-day="${day}">+ Ajouter un créneau</button>
+      </div>`;
+  }
+
+  function renderAll() {
+    document.getElementById('daysContainer').innerHTML = DAY_ORDER.map(renderDay).join('');
+    renderStats();
+    highlightToday();
+    applyTodayView();
+  }
+
+  function getTodayName() {
+    const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    return jours[new Date().getDay()];
+  }
+
+  function highlightToday() {
+    const today = getTodayName();
+    document.querySelectorAll('.day-card').forEach(card => {
+      if (card.dataset.day === today) {
+        card.style.border = '1.5px solid var(--or)';
+        card.querySelector('.day-header').style.background = 'rgba(201,168,76,0.15)';
+      } else {
+        card.style.border = '';
+        card.querySelector('.day-header').style.background = '';
+      }
+    });
+  }
+
+  function applyTodayView() {
+    const today = getTodayName();
+    document.querySelectorAll('.day-card').forEach(card => {
+      card.classList.toggle('hidden-not-today', todayViewActive && card.dataset.day !== today);
+    });
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DAYS_DATA));
+    } catch (e) {
+      showToast('Erreur de sauvegarde ⚠️', true);
+    }
+  }
+
+  function migrateSlot(s) {
+    // Ajoute les nouveaux champs sans jamais toucher horaires/noms déjà enregistrés.
+    if (!s.type) {
+      if (s.cls === 'sn-ado') s.type = 'ado';
+      else if (s.cls === 'nouveau') s.type = 'nouveau';
+      else s.type = 'adulte';
+    }
+    if (!s.country) {
+      if (s.cls === 'usa') s.country = 'usa';
+      else if (s.cls === 'italie') s.country = 'italie';
+      else s.country = 'senegal';
+    }
+    if (!s.subjects) s.subjects = [];
+    if (!s.presence) s.presence = 'prevu';
+    if (!s.status) s.status = (s.type === 'nouveau' ? 'a_confirmer' : 'confirme');
+    delete s.cls;
+    return s;
+  }
+
+  function loadData() {
+    let saved;
+    try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { saved = null; }
+    if (!saved) {
+      // Ancienne sauvegarde (v2) à migrer si elle existe, pour ne rien perdre.
+      try { saved = localStorage.getItem(OLD_STORAGE_KEY); } catch (e) { saved = null; }
+    }
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      DAY_ORDER.forEach(day => {
+        (parsed[day] || []).forEach(migrateSlot);
+      });
+      DAYS_DATA = parsed;
+      saveData();
+    } catch (e) {}
+  }
+
+  function toggleEdit() {
+    const body = document.body;
+    const btn = document.getElementById('editToggle');
+    body.classList.toggle('editing');
+    if (body.classList.contains('editing')) {
+      btn.textContent = '✅ Terminer';
+      btn.classList.add('active');
+      showToast('Mode modification activé');
+    } else {
+      btn.textContent = '✏️ Modifier le planning';
+      btn.classList.remove('active');
+      saveData();
+      showToast('Modifications enregistrées ✓');
+    }
+  }
+
+  document.getElementById('editToggle').addEventListener('click', toggleEdit);
+
+  document.getElementById('todayToggle').addEventListener('click', () => {
+    todayViewActive = !todayViewActive;
+    const btn = document.getElementById('todayToggle');
+    btn.classList.toggle('active', todayViewActive);
+    btn.textContent = todayViewActive ? '📅 Toute la semaine' : '📅 Aujourd\'hui';
+    applyTodayView();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (!confirm('Réinitialiser tout le planning sur cet appareil ? Cette action est irréversible.')) return;
+    DAYS_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    saveData();
+    renderAll();
+    showToast('Planning réinitialisé');
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(DAYS_DATA, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'planning-cours-sauvegarde.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Fichier exporté ✓');
+  });
+
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        DAY_ORDER.forEach(day => { (data[day] || []).forEach(migrateSlot); });
+        DAYS_DATA = data;
+        saveData();
+        renderAll();
+        showToast('Planning importé ✓');
+      } catch (err) {
+        showToast('Fichier invalide', true);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  function rerenderSlotDynamicParts(slotEl, day, idx) {
+    const s = DAYS_DATA[day][idx];
+    const dur = slotEl.querySelector('.slot-duration');
+    const a = parseTime(s.start), b = parseTime(s.end);
+    dur.textContent = (a !== null && b !== null) ? formatDuration(b - a) : '—';
+    const tzBox = slotEl.querySelector('.tz-box');
+    if (tzBox) tzBox.outerHTML = tzBoxHtml(s);
+    renderStats();
+    const dayCard = slotEl.closest('.day-card');
+    if (dayCard) {
+      dayCard.querySelector('.day-summary').textContent = daySummary(DAYS_DATA[day]);
+    }
+  }
+
+  document.getElementById('daysContainer').addEventListener('input', (e) => {
+    const el = e.target;
+    if (!el.classList.contains('editable')) return;
+    const slotEl = el.closest('.slot');
+    const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+    const field = el.dataset.field;
+    DAYS_DATA[day][idx][field] = el.value;
+    saveData();
+    rerenderSlotDynamicParts(slotEl, day, idx);
+  });
+
+  document.getElementById('daysContainer').addEventListener('change', (e) => {
+    const el = e.target;
+    const slotEl = el.closest('.slot');
+    if (!slotEl) return;
+    const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+    const s = DAYS_DATA[day][idx];
+    const action = el.dataset.action;
+    if (action === 'set-type') {
+      s.type = el.value;
+      saveData(); renderAll();
+    } else if (action === 'set-country') {
+      s.country = el.value;
+      saveData(); renderAll();
+    } else if (action === 'set-us-city') {
+      s.usTz = el.value;
+      saveData();
+      rerenderSlotDynamicParts(slotEl, day, idx);
+    }
+  });
+
+  document.getElementById('daysContainer').addEventListener('click', (e) => {
+    const delBtn = e.target.closest('[data-action="del"]');
+    if (delBtn) {
+      const slotEl = delBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      if (confirm('Supprimer ce créneau ?')) {
+        DAYS_DATA[day].splice(idx, 1);
+        saveData();
+        renderAll();
+      }
+      return;
+    }
+    const addBtn = e.target.closest('[data-action="add"]');
+    if (addBtn) {
+      const day = addBtn.dataset.day;
+      DAYS_DATA[day] = DAYS_DATA[day] || [];
+      DAYS_DATA[day].push({ start: '00h00', end: '00h00', label: 'Nouvel élève', type: 'nouveau', country: 'senegal', subjects: [], presence: 'prevu', status: 'a_confirmer' });
+      saveData();
+      renderAll();
+      const card = document.querySelector(`.day-card[data-day="${day}"] .slot:last-child .name-input`);
+      if (card) card.focus();
+      return;
+    }
+    const subjectBtn = e.target.closest('[data-action="toggle-subject"]');
+    if (subjectBtn) {
+      const slotEl = subjectBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      const s = DAYS_DATA[day][idx];
+      s.subjects = s.subjects || [];
+      const key = subjectBtn.dataset.subject;
+      const pos = s.subjects.indexOf(key);
+      if (pos >= 0) s.subjects.splice(pos, 1); else s.subjects.push(key);
+      saveData();
+      subjectBtn.classList.toggle('active');
+      const subjEl = slotEl.querySelector('.slot-subjects');
+      const text = subjectsText(s.subjects);
+      if (subjEl) {
+        subjEl.textContent = text;
+        subjEl.style.display = text ? '' : 'none';
+      } else if (text) {
+        const row = slotEl.querySelector('.slot-label-row');
+        row.insertAdjacentHTML('afterend', `<div class="slot-subjects">${text}</div>`);
+      }
+      return;
+    }
+    const presenceBtn = e.target.closest('[data-action="cycle-presence"]');
+    if (presenceBtn) {
+      const slotEl = presenceBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      const s = DAYS_DATA[day][idx];
+      const cur = PRESENCE_ORDER.indexOf(s.presence || 'prevu');
+      s.presence = PRESENCE_ORDER[(cur + 1) % PRESENCE_ORDER.length];
+      saveData();
+      presenceBtn.textContent = PRESENCE_LABELS[s.presence];
+      presenceBtn.className = 'badge-btn badge-presence ' + s.presence;
+      return;
+    }
+    const statusBtn = e.target.closest('[data-action="cycle-status"]');
+    if (statusBtn) {
+      const slotEl = statusBtn.closest('.slot');
+      const day = slotEl.dataset.day, idx = parseInt(slotEl.dataset.index, 10);
+      const s = DAYS_DATA[day][idx];
+      const cur = STATUS_ORDER.indexOf(s.status || 'confirme');
+      s.status = STATUS_ORDER[(cur + 1) % STATUS_ORDER.length];
+      saveData();
+      statusBtn.textContent = STATUS_LABELS[s.status];
+      statusBtn.className = 'badge-btn badge-status ' + s.status;
+      return;
+    }
+  });
+
+  loadData();
+  renderAll();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+
+</body>
+</html>
